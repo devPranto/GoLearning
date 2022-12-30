@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket Booking App</title>
+    <title>Response</title>
 </head>
 <body>
-    <h1>{{.Title}}</h1>
-
-<p>[<a href="/edit/{{.Title}}">edit</a>]</p>
-
-<div>{{printf "%s" .Body}}</div>
+    <h1>Congratulations {{.}}! You have booked your ticket</h1>
+    <a href="/ticket/get">See Guests</a>
 </body>
 </html>
