@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type person struct {
 	name     string
@@ -30,4 +33,17 @@ func main() {
 	devPointer:=&dev
 	devPointer.updateName("Pranto Dev")
 	dev.print()
+	for{
+		time:=1
+		go sendEmail(dev)
+		fmt.Println("its my : ",time)
+		time+=1
+	}
+	
+}
+
+func sendEmail(p person){
+	time.Sleep(5*time.Second)
+	address := p.contact.email
+	fmt.Printf("**Sending email to %v **",address)
 }
