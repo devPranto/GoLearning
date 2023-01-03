@@ -18,7 +18,7 @@ func main() {
 	//router.HandleFunc("/{date}", getTiming).Methods("GET")
 	//router.HandleFunc("/", getTiming).Methods("GET")
 	//router.HandleFunc("/", getTiming).Methods("GET")
-	//fetchAPI()
+	fetchAPI()
 	log.Fatal(http.ListenAndServe(":9010", router))
 
 }
@@ -30,7 +30,7 @@ func fetchAPI() {
 
 	dataFrame := &model.PrayerTiming{}
 	for index, value := range Response.Data {
-		dataFrame.ID = index
+		dataFrame.ID = index + 1
 		dataFrame.Fajr = value.Timings.Fajr
 		dataFrame.Asr = value.Timings.Asr
 		dataFrame.Dhuhr = value.Timings.Dhuhr
