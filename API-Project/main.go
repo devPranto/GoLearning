@@ -3,7 +3,6 @@ package main
 import (
 	"api-project/package/model"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -39,7 +38,7 @@ func fetchAPI() {
 		dataFrame.Date = value.Date.Readable
 		dataFrame.Creat()
 	}
-	fmt.Printf("%+v \n", dataFrame)
+	//fmt.Printf("%+v \n", dataFrame)
 }
 
 func getJson(url string, target interface{}) error {
