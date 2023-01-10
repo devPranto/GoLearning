@@ -1,4 +1,4 @@
-package model
+ package model
 
 import (
 	"api-project/package/config"

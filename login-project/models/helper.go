@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -40,3 +41,11 @@ func (user *User) Insert() {
 func Update() {
 
 }
+func Find(mail string) *User {
+	var result User
+	filter := bson.D{{"email", mail}}
+	collection.FindOne(context.Background(), filter).Decode(&result)
+	return &result
+}
+
+//fixme help me with some of the things

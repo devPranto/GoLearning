@@ -6,4 +6,7 @@ type User struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 	Gender    string `json:"gender"`
+	Password  []byte `json:"password"`
 }
+
+// todo email can be converted to bson _id to make it unique key
