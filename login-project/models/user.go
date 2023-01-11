@@ -10,3 +10,4 @@ type User struct {
 }
 
 // todo email can be converted to bson _id to make it unique key
+// todo there can be added role int which can control user access

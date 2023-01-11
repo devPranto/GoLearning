@@ -1,24 +1,29 @@
 package main
 
+//todo make sure one email cant use multiple times
+//todo upload images in local repository and save path in cloud
+//fixme handle errors
 import (
-	"context"
-	"encoding/json"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"fmt"
-	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 	"html/template"
-	"log"
 	"login-project/models"
-	"os"
-	"strings"
-
 	"net/http"
-
-	"github.com/gorilla/mux"
+	"strings"
+	"time"
 )
+
+var (
+	expireyTime   = time.Now().Add(time.Minute * 1)
+	privateKey, _ = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+)
+
+//var store = sessions.NewCookieStore(privateKey)
 
 func main() {
 	router := mux.NewRouter()
@@ -37,16 +42,33 @@ func login(writer http.ResponseWriter, request *http.Request) {
 }
 
 func check(writer http.ResponseWriter, request *http.Request) {
+	// todo uncomment and modify codes in order to check with postman
+	//var result Credentials
+	//json.NewDecoder(request.Body).Decode(&result)
+	//err := bcrypt.CompareHashAndPassword([]byte(result.Password), []byte("devhouse"))
 	Email := strings.TrimSpace(request.FormValue("email"))
 	password := strings.TrimSpace(request.FormValue("password"))
 	result := models.Find(Email)
 	fmt.Println(result)
 	err := bcrypt.CompareHashAndPassword(result.Password, []byte(password))
 	if err == nil {
-		fmt.Fprint(writer, "SUCCESS")
+		writer.WriteHeader(http.StatusOK)
+		//fmt.Fprint(writer, "SUCCESS")
 	} else {
-		fmt.Fprint(writer, "Failed")
+		writer.WriteHeader(http.StatusBadRequest)
+		//fmt.Fprint(writer, "Failed")
+		return
 	}
+	token := CreatJWT(result)
+	fmt.Println(token)
+
+	http.SetCookie(writer, &http.Cookie{
+		Name:    "AHOM",
+		Value:   token,
+		Expires: expireyTime,
+	})
+	t, _ := template.ParseFiles("views/welcome.html")
+	t.Execute(writer, result)
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -76,42 +98,32 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func database() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
-
-	uri := os.Getenv("mongodb+srv://prantodev:password18@cluster0.yyh6vb2.mongodb.net/?retryWrites=true&w=majority")
-	if uri == "" {
-		log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
-	}
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+func CreatJWT(user *models.User) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+		"sub": user.Email,
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+	tokenString, err := token.SignedString(privateKey)
 	if err != nil {
-		panic(err)
+		return "nil" //fmt.Sprintf("failed to creat token : %v", err)
+	} else {
+		return tokenString
 	}
-
-	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
-
-	coll := client.Database("sample_mflix").Collection("movies")
-	title := "Back to the Future"
-
-	var result bson.M
-	err = coll.FindOne(context.TODO(), bson.D{{"title", title}}).Decode(&result)
-	if err == mongo.ErrNoDocuments {
-		fmt.Printf("No document was found with the title %s\n", title)
-		return
-	}
-	if err != nil {
-		panic(err)
-	}
-
-	jsonData, err := json.MarshalIndent(result, "", "    ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", jsonData)
 }
+
+//func CreatJWT(user *Credentials) string {
+//	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+//		"sub": user.Email,
+//		"exp": time.Now().Add(time.Hour).Unix(),
+//	})
+//	tokenString, err := token.SignedString(privateKey)
+//	if err != nil {
+//		return "nil" //fmt.Sprintf("failed to creat token : %v", err)
+//	} else {
+//		return tokenString
+//	}
+//}
+//type Credentials struct {
+//	Email    string `json:"username"`
+//	Password string `json:"password"`
+//}
