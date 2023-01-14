@@ -3,8 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>Welcome</title>
+    <style>
+        label , input {
+            display: block;
+        }
+
+        form , label {
+            margin-top: 20px;
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
- <h1>{{.FirstName}}</h1>
+ <h1> Welcome Mr. {{.FirstName}}</h1>
+ <ol>
+    <li>{{.Email}}</li> 
+    <li>{{.Gender}}</li> 
+    {{.Path}}
+    <img src="/picture/profile_Pranto3515602357.jpg" alt="/picture/profile_prova3684369978.png" width="500" height="500">
+ </ol>
+ <button><a href="/update" target="_blank">New Member</a> </button>
 </body>
 </html>

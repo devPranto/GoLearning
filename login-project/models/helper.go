@@ -38,12 +38,19 @@ func (user *User) Insert() {
 	}
 	fmt.Println(result)
 }
+func InsertToken(token *User) {
+	opts := options.Update().SetUpsert(true)
+	filter := bson.D{{"_id", token.Email}}
+	update := bson.D{{"$set", bson.D{{"jwt", token.JWT}}}}
+	collection.UpdateOne(context.TODO(), filter, update, opts)
+
+}
 func Update() {
 
 }
 func Find(mail string) *User {
 	var result User
-	filter := bson.D{{"email", mail}}
+	filter := bson.D{{"_id", mail}}
 	collection.FindOne(context.Background(), filter).Decode(&result)
 	return &result
 }
