@@ -20,7 +20,8 @@ func main() {
 	router.HandleFunc("/submit", controllers.Submit)
 	router.HandleFunc("/authenticate", controllers.Authenticate)
 	router.HandleFunc("/update", controllers.Update)
-	http.Handle("/", controllers.Middleware(router))
+	router.HandleFunc("/logout", controllers.Logout)
+	//http.Handle("/", controllers.Middleware(router))
 	log.Fatal(http.ListenAndServe(":8080", router))
 
 }

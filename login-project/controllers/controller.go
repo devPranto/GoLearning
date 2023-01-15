@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -9,9 +11,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/dgrijalva/jwt-go/v4"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func Login(writer http.ResponseWriter, request *http.Request) {
@@ -20,12 +19,17 @@ func Login(writer http.ResponseWriter, request *http.Request) {
 
 }
 
+var (
+	mySigningKey = []byte("AllYourBase")
+	expireTime   = time.Now().Add(2 * time.Minute)
+)
+
 func Authenticate(writer http.ResponseWriter, request *http.Request) {
 
 	Email := strings.TrimSpace(request.FormValue("email"))
 	password := strings.TrimSpace(request.FormValue("password"))
 	result := models.Find(Email)
-	fmt.Println(result)
+	fmt.Printf(" Query Data: %v \n", result)
 	err := bcrypt.CompareHashAndPassword(result.Password, []byte(password))
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
@@ -33,6 +37,7 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	token := CreatJWT(result)
+	fmt.Printf("This is the token : %v \n", token)
 	cookie := http.Cookie{
 		Name:     "JWT",
 		Value:    token,
@@ -48,26 +53,55 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 	models.InsertToken(result)
 	t.Execute(writer, result)
 }
+
+func CreatJWT(user *models.User) string {
+
+	// Create the Claims
+	claims := &jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(expireTime),
+		Issuer:    user.Email,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	ss, _ := token.SignedString(mySigningKey)
+	return ss
+}
+
 func Update(w http.ResponseWriter, r *http.Request) {
-	cookie, _ := r.Cookie("JWT")
-	claims := jwt.StandardClaims{}
-	token, err := jwt.ParseWithClaims(cookie.Value, claims,
-		func(token *jwt.Token) (interface{}, error) {
-			return jwt.SigningMethodES256, nil
-		})
-	fmt.Println(claims.Issuer)
-	//models.Find(id)
-	//fmt.Printf("Claim : %v \n", claims)
-	//for i, v := range claims {
-	//	fmt.Printf("claim : %+v , %+v \n", i, v)
-	//}
-	fmt.Println(cookie)
-	fmt.Println(token.Valid)
+	fmt.Println("HI im update")
+	cookie, err := r.Cookie("JWT")
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprint(w, "unauthorized access")
+		fmt.Println(err.Error())
+		if err == http.ErrNoCookie {
+			// If the cookie is not set, return an unauthorized status
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		// For any other type of error, return a bad request status
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	tokenString := cookie.Value
+	claims := &jwt.RegisteredClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return mySigningKey, nil
+	})
+	if err != nil {
+		fmt.Println("hiiii")
+		if err == jwt.ErrSignatureInvalid {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !token.Valid {
+		fmt.Println("hiiii 2")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	w.Write([]byte(fmt.Sprintf("Welcome %s!", claims)))
+
 }
 func Middleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +110,7 @@ func Middleware(h http.Handler) http.Handler {
 		h.ServeHTTP(w, r)
 	})
 }
+
 func Index(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("views/index.html")
 	t.Execute(w, "")
@@ -119,24 +154,21 @@ func Submit(w http.ResponseWriter, r *http.Request) {
 	userData.Insert()
 
 }
-
+func Logout(writer http.ResponseWriter, r *http.Request) {
+	cookie := http.Cookie{
+		Name:     "JWT",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   3600,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(writer, &cookie)
+	//todo remove token from mongodb
+}
 func Register(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("views/register.html")
 	t.Execute(w, nil)
 
 }
-
-func CreatJWT(user *models.User) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
-		"sub": user.Email,
-		"exp": time.Now().Add(time.Hour).Unix(),
-	})
-	tokenString, err := token.SignedString(token)
-	if err != nil {
-		return fmt.Sprintf("failed to creat token : %v", err)
-	} else {
-		return tokenString
-	}
-}
-
-//"failed to creat token : key is of invalid type: expected *ecdsa.PrivateKey or crypto.Signer, received string"

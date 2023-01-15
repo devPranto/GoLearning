@@ -1,6 +1,6 @@
 package models
 
-import "github.com/dgrijalva/jwt-go/v4"
+import "github.com/golang-jwt/jwt/v4"
 
 type JWT struct {
 	Header    string `json:"header"`
@@ -8,6 +8,6 @@ type JWT struct {
 	Signature string `json:"signature"`
 }
 type Claims struct {
-	Username string `json:"username"`
-	jwt.StandardClaims
+	Username       string `json:"username"`
+	RegisterClaims jwt.MapClaims
 }
