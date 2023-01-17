@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <meta charset="UTF-8">
     <title>Welcome</title>
     <style>
@@ -13,17 +14,35 @@
             margin-left: 20px;
             margin-bottom: 20px;
         }
+        a{
+            color: aliceblue;
+        }
     </style>
 </head>
 <body>
- <h1> Welcome Mr. {{.FirstName}}</h1>
- <ol>
-    <li>{{.Email}}</li> 
-    <li>{{.Gender}}</li> 
-    {{.Path}}
-    <img src="/picture/profile_Pranto3515602357.jpg" alt="/picture/profile_prova3684369978.png" width="500" height="500">
- </ol>
- <button><a href="/update" >New Member</a> </button>
- <button><a href="/logout" >New Member</a> </button>
+
+<h1> Welcome {{.FirstName}}</h1>
+     <table class="table">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">First Name</th>
+            <th scope="col">Last Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Picture</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{.FirstName}}</td>
+            <td>{{.LastName}}</td>
+            <td>{{.Email}}</td>
+            <td>  <img src='{{.Path}}' alt="Picture of the user" width="500" height="500"></td>
+          </tr>
+        </tbody>
+      </table>
+     <button type="button" class="btn btn-danger"><a href="/logout" >Logout</a></button>
+     <button type="button" class="btn btn-info"><a href="/update" >Edit</a></button>
+
+
 </body>
 </html>

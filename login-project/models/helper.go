@@ -45,8 +45,12 @@ func InsertToken(token *User) {
 	collection.UpdateOne(context.TODO(), filter, update, opts)
 
 }
-func Update() {
-
+func Update(user *User) {
+	opts := options.Update().SetUpsert(true)
+	filter := bson.D{{"_id", user.Email}}
+	update := bson.D{{"$set", bson.D{{"firstname", user.FirstName}, {"lastname", user.LastName}, {"password", user.Password}}}}
+	result, _ := collection.UpdateOne(context.TODO(), filter, update, opts)
+	fmt.Println(result)
 }
 func Find(mail string) *User {
 	var result User

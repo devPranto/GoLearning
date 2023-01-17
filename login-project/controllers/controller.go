@@ -13,45 +13,38 @@ import (
 	"time"
 )
 
+var (
+	mySigningKey = []byte("AllYourBase")
+	expireTime   = time.Now().Add(2 * time.Hour)
+)
+
+// Login and Register serves the pages only , no logic used
+
 func Login(writer http.ResponseWriter, request *http.Request) {
 	t, _ := template.ParseFiles("views/login.html")
 	t.Execute(writer, nil)
 
 }
 
-var (
-	mySigningKey = []byte("AllYourBase")
-	expireTime   = time.Now().Add(2 * time.Minute)
-)
+func Register(w http.ResponseWriter, r *http.Request) {
+	t, _ := template.ParseFiles("views/register.html")
+	t.Execute(w, nil)
 
-func Authenticate(writer http.ResponseWriter, request *http.Request) {
+}
+func UpdateInfo(w http.ResponseWriter, r *http.Request) {
+	password, _ := bcrypt.GenerateFromPassword([]byte(r.FormValue("password")), 14)
 
-	Email := strings.TrimSpace(request.FormValue("email"))
-	password := strings.TrimSpace(request.FormValue("password"))
-	result := models.Find(Email)
-	fmt.Printf(" Query Data: %v \n", result)
-	err := bcrypt.CompareHashAndPassword(result.Password, []byte(password))
-	if err != nil {
-		writer.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(writer, "bad request")
-		return
+	user := models.User{
+		Email:     r.FormValue("email"),
+		FirstName: r.FormValue("fname"),
+		LastName:  r.FormValue("lname"),
+		Password:  password,
 	}
-	token := CreatJWT(result)
-	fmt.Printf("This is the token : %v \n", token)
-	cookie := http.Cookie{
-		Name:     "JWT",
-		Value:    token,
-		Path:     "/",
-		MaxAge:   3600,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(writer, &cookie)
-	t, _ := template.ParseFiles("views/welcome.html")
-	result.JWT = token
-	models.InsertToken(result)
-	t.Execute(writer, result)
+	models.Update(&user)
+	fmt.Println("Hi", r.FormValue("fname"))
+	//t, _ := template.ParseFiles("views/register.html")
+	//t.Execute(w, nil)
+	w.Write([]byte("Success"))
 }
 
 func CreatJWT(user *models.User) string {
@@ -68,7 +61,6 @@ func CreatJWT(user *models.User) string {
 }
 
 func Update(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("HI im update")
 	cookie, err := r.Cookie("JWT")
 	if err != nil {
 		fmt.Println(err.Error())
@@ -87,7 +79,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return mySigningKey, nil
 	})
 	if err != nil {
-		fmt.Println("hiiii")
+		fmt.Println("hiiii : ", err.Error())
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
@@ -100,7 +92,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	w.Write([]byte(fmt.Sprintf("Welcome %s!", claims)))
+	user := models.Find(claims.Issuer)
+	t, _ := template.ParseFiles("views/update.html")
+	t.Execute(w, user)
 
 }
 func Middleware(h http.Handler) http.Handler {
@@ -117,7 +111,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func Submit(w http.ResponseWriter, r *http.Request) {
+func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	r.ParseMultipartForm(10 << 20)
 	password, _ := bcrypt.GenerateFromPassword([]byte(r.FormValue("password")), 14)
@@ -147,13 +141,51 @@ func Submit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	userData.Path = tempFile.Name()
+	str := strings.Replace(tempFile.Name(), "\\", "/", 1)
+	userData.Path = str
 	tempFile.Write(fileBytes)
-	fmt.Println(userData)
+	fmt.Println("==================================================================")
+	fmt.Println("User Data : ", userData)
+	fmt.Println("==================================================================")
 	fmt.Fprint(w, userData)
 	userData.Insert()
 
 }
+
+func Authenticate(writer http.ResponseWriter, request *http.Request) {
+	Email := strings.TrimSpace(request.FormValue("email"))
+	password := strings.TrimSpace(request.FormValue("password"))
+	result := models.Find(Email)
+	fmt.Printf(" Query Data: %v \n", result)
+	err := bcrypt.CompareHashAndPassword(result.Password, []byte(password))
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(writer, "bad request")
+		return
+	}
+	token := CreatJWT(result)
+	fmt.Printf("This is the token : %v \n", token)
+	cookie := http.Cookie{
+		Name:     "JWT",
+		Value:    token,
+		Path:     "/",
+		MaxAge:   3600,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(writer, &cookie)
+	t, err := template.ParseFiles("views/welcome.html")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	result.JWT = token
+	models.InsertToken(result)
+	fmt.Println("In  Authe")
+	t.Execute(writer, result)
+}
+
 func Logout(writer http.ResponseWriter, r *http.Request) {
 	cookie := http.Cookie{
 		Name:     "JWT",
@@ -165,10 +197,7 @@ func Logout(writer http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(writer, &cookie)
-	//todo remove token from mongodb
-}
-func Register(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("views/register.html")
-	t.Execute(w, nil)
-
+	t.Execute(writer, nil)
+	//todo remove token from mongodb
 }
