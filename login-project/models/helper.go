@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	connectionString = "mongodb+srv://pranto:password18@cluster0.ittknvy.mongodb.net/?retryWrites=true&w=majority"
+	connectionString = "mongodb+srv://<username>:<password>@cluster0.ittknvy.mongodb.net/?retryWrites=true&w=majority"
 	dbName           = "loginApp"
 	collectionName   = "user"
 )
