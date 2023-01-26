@@ -28,19 +28,8 @@ func main() {
 		fmt.Println("Error marshal : ", err.Error())
 		return
 	}
-	h := sha256.New()
-
-	_, er := h.Write(block)
-
-	if er != nil {
-		fmt.Println("error hash : ", err.Error())
-		return
-	}
-	hash := h.Sum(nil)
-	//fmt.Println(string(hash))
-	fmt.Printf("hash : %x \n", hash)
-	fmt.Printf("%+v \n", b)
-
+	value := createHash(block)
+	fmt.Println(value)
 }
 
 func (b *Block) New() *Block {
@@ -53,4 +42,13 @@ func (b *Block) New() *Block {
 	b.TimeStamp = time.Now()
 	return b
 
+}
+func createHash(data []byte) string {
+	h := sha256.New()
+	_, err := h.Write(data)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	hash := h.Sum(nil)
+	return fmt.Sprintf("%x", hash)
 }

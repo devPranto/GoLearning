@@ -3,9 +3,9 @@ module login-project
 go 1.19
 
 require (
-	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/gorilla/mux v1.8.0
+	github.com/larrybattle/nonce-golang v0.0.0-20150303194802-a7d5615a19fd
 	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/crypto v0.5.0
 )

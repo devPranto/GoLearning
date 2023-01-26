@@ -24,6 +24,10 @@ func main() {
 	router.HandleFunc("/update", controllers.Update)
 	router.HandleFunc("/logout", controllers.Logout)
 	router.HandleFunc("/updateInfo", controllers.UpdateInfo).Methods("POST")
+	router.HandleFunc("/block/{email}", controllers.Block)
+	router.HandleFunc("/decode", controllers.DecodeHash)
+	router.HandleFunc("/search", controllers.Search)
+	router.HandleFunc("/search/{email}", controllers.ShowBlocks)
 	//http.Handle("/", controllers.Middleware(router))
 	log.Fatal(http.ListenAndServe(":8080", router))
 
