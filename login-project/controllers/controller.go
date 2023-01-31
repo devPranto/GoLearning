@@ -143,7 +143,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
-	//w.Header().Set("Content-Type", "application/json")
+	//w.Header().Set("Content-Type", "application/html")
 	r.ParseMultipartForm(10 << 20)
 	password, _ := bcrypt.GenerateFromPassword([]byte(r.FormValue("password")), 14)
 	userData := models.User{
