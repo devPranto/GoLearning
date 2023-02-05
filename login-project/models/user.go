@@ -23,11 +23,13 @@ type Block struct {
 	Nonce           string
 	Hash            string
 }
+
+// block -> json -> cipherText = Transaction Data
 type BlockData struct {
-	User            string `bson:"user"`
+	User            string `bson:"user"` // mail
 	Id              int    `json:"block_id" bson:"block_id"`
-	Hash            string `json:"hash"bson:"hash"` // sha256
-	TransactionData []byte `json:"transaction_data"bson:"transactionData"`
+	Hash            string `json:"hash"bson:"hash"`                        // sha256
+	TransactionData []byte `json:"transaction_data"bson:"transactionData"` // cipher text
 }
 
 // todo email can be converted to bson _id to make it unique key
